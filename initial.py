@@ -7,6 +7,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+# Define all available series
+all_series = ['2', '8', '9', '12', '18', '30', '32', '35', '49', '3', '4', '5', '6', '7', '13', '14', '19', '23', '51', '36', '37', '38', '39', '40']
+
 # Define the series dictionary
 series_dict = {
     "2": "Food, drink, tobacco (ex super)",
@@ -98,20 +101,17 @@ def plot_data(data_df, series):
 
 # Define a function to plot all categories
 def plot_definitions():
-    # Define which series are "value items" - you can modify this list
-    value_items = ['32', '19', '23', '18', '51']  # Jewellery, Motor vehicles, Furniture, Consumer durable goods, Electrical goods
-    
     # Create tabs for better organization
     tab1, tab2 = st.tabs(["📊 Volume Index", "📈 Year-on-Year Change"])
     
     with tab1:
         st.markdown("### Volume Index Trends")
         # Use 2 columns layout for better readability
-        for i in range(0, len(value_items), 2):
+        for i in range(0, len(all_series), 2):
             cols = st.columns(2)
             for j in range(2):
-                if i + j < len(value_items):
-                    series = value_items[i + j]
+                if i + j < len(all_series):
+                    series = all_series[i + j]
                     with cols[j]:
                         try:
                             data_df = fetch_data(series)
@@ -135,11 +135,11 @@ def plot_definitions():
     with tab2:
         st.markdown("### Year-on-Year Percentage Change")
         # Use 2 columns layout for better readability
-        for i in range(0, len(value_items), 2):
+        for i in range(0, len(all_series), 2):
             cols = st.columns(2)
             for j in range(2):
-                if i + j < len(value_items):
-                    series = value_items[i + j]
+                if i + j < len(all_series):
+                    series = all_series[i + j]
                     with cols[j]:
                         try:
                             data_df = fetch_data(series)
@@ -171,27 +171,26 @@ def main():
     # Add menu option for view type
     view_type = st.radio(
         "Choose view:",
-        ["Select Individual Category", "View All Value Items"],
+        ["Select Individual Category", "View All Categories"],
         horizontal=True
     )
     
     st.divider()
     
     if view_type == "Select Individual Category":
-        series = st.selectbox('Select a series to plot', ['2', '8', '9', '12', '18', '30', '32', '35', '49', '3', '4', '5', '6', '7', '13', '14', '19', '23', '51', '36', '37', '38', '39', '40'])
+        series = st.selectbox('Select a series to plot', all_series)
         data_df = fetch_data(series)
         plot_data(data_df, series)
 
         # Display the latest data points
         st.dataframe(data_df.tail())
     else:
-        # View all value items
+        # View all categories
         plot_definitions()
         
-        # Show latest data for each value item in expanders
+        # Show latest data for each category in expanders
         st.subheader("📋 Latest Data")
-        value_items = ['32', '19', '23', '18', '51']
-        for series in value_items:
+        for series in all_series:
             try:
                 data_df = fetch_data(series)
                 series_description = series_dict[series]
