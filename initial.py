@@ -36,6 +36,7 @@ series_dict = {
 }
 
 # Define a function to fetch and process the data
+@st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_data(series):
     url = "https://www.censtatd.gov.hk/api/post.php"
     parameters = {
@@ -100,53 +101,65 @@ def plot_definitions():
     # Define which series are "value items" - you can modify this list
     value_items = ['32', '19', '23', '18', '51']  # Jewellery, Motor vehicles, Furniture, Consumer durable goods, Electrical goods
     
-    st.subheader("Value Items (Actual Volume Index)")
-    cols = st.columns(len(value_items))
+    # Create tabs for better organization
+    tab1, tab2 = st.tabs(["📊 Volume Index", "📈 Year-on-Year Change"])
     
-    for idx, series in enumerate(value_items):
-        with cols[idx]:
-            try:
-                data_df = fetch_data(series)
-                series_description = series_dict[series]
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.plot(data_df.index, data_df[f'{series}_volume_index'], 
-                       label=f'{series_description}', linewidth=2)
-                ax.xaxis.set_major_locator(mdates.YearLocator())
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-                ax.set_title(f'{series_description}', fontsize=10)
-                ax.set_xlabel('Year', fontsize=8)
-                ax.set_ylabel('Index', fontsize=8)
-                ax.legend(fontsize=6)
-                plt.xticks(rotation=45, fontsize=7)
-                plt.grid(True, color='grey', linestyle='-', linewidth=0.25, alpha=0.5)
-                plt.tight_layout()
-                st.pyplot(fig)
-            except Exception as e:
-                st.error(f"Error loading {series_description}: {str(e)}")
+    with tab1:
+        st.markdown("### Volume Index Trends")
+        # Use 2 columns layout for better readability
+        for i in range(0, len(value_items), 2):
+            cols = st.columns(2)
+            for j in range(2):
+                if i + j < len(value_items):
+                    series = value_items[i + j]
+                    with cols[j]:
+                        try:
+                            data_df = fetch_data(series)
+                            series_description = series_dict[series]
+                            fig, ax = plt.subplots(figsize=(10, 5))
+                            ax.plot(data_df.index, data_df[f'{series}_volume_index'], 
+                                   label=f'{series_description}', linewidth=2.5, color='#1f77b4')
+                            ax.xaxis.set_major_locator(mdates.YearLocator())
+                            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+                            ax.set_title(f'{series_description}', fontsize=12, fontweight='bold')
+                            ax.set_xlabel('Year', fontsize=10)
+                            ax.set_ylabel('Index', fontsize=10)
+                            ax.legend(fontsize=9)
+                            plt.xticks(rotation=45, fontsize=9)
+                            plt.grid(True, color='grey', linestyle='-', linewidth=0.25, alpha=0.5)
+                            plt.tight_layout()
+                            st.pyplot(fig)
+                        except Exception as e:
+                            st.error(f"Error loading {series_description}: {str(e)}")
     
-    st.subheader("Value Items (YoY Change)")
-    cols2 = st.columns(len(value_items))
-    
-    for idx, series in enumerate(value_items):
-        with cols2[idx]:
-            try:
-                data_df = fetch_data(series)
-                series_description = series_dict[series]
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.plot(data_df.index, data_df[f'{series}_volume_index_yoy'], 
-                       label='YoY Change', linewidth=2, color='orange')
-                ax.xaxis.set_major_locator(mdates.YearLocator())
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-                ax.set_title(f'{series_description} YoY', fontsize=10)
-                ax.set_xlabel('Year', fontsize=8)
-                ax.set_ylabel('Percentage Change', fontsize=8)
-                ax.legend(fontsize=6)
-                plt.xticks(rotation=45, fontsize=7)
-                plt.grid(True, color='grey', linestyle='-', linewidth=0.25, alpha=0.5)
-                plt.tight_layout()
-                st.pyplot(fig)
-            except Exception as e:
-                st.error(f"Error loading {series_description}: {str(e)}")
+    with tab2:
+        st.markdown("### Year-on-Year Percentage Change")
+        # Use 2 columns layout for better readability
+        for i in range(0, len(value_items), 2):
+            cols = st.columns(2)
+            for j in range(2):
+                if i + j < len(value_items):
+                    series = value_items[i + j]
+                    with cols[j]:
+                        try:
+                            data_df = fetch_data(series)
+                            series_description = series_dict[series]
+                            fig, ax = plt.subplots(figsize=(10, 5))
+                            ax.plot(data_df.index, data_df[f'{series}_volume_index_yoy'], 
+                                   label='YoY Change', linewidth=2.5, color='#ff7f0e')
+                            ax.axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.3)
+                            ax.xaxis.set_major_locator(mdates.YearLocator())
+                            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+                            ax.set_title(f'{series_description} YoY', fontsize=12, fontweight='bold')
+                            ax.set_xlabel('Year', fontsize=10)
+                            ax.set_ylabel('Percentage Change (%)', fontsize=10)
+                            ax.legend(fontsize=9)
+                            plt.xticks(rotation=45, fontsize=9)
+                            plt.grid(True, color='grey', linestyle='-', linewidth=0.25, alpha=0.5)
+                            plt.tight_layout()
+                            st.pyplot(fig)
+                        except Exception as e:
+                            st.error(f"Error loading {series_description}: {str(e)}")
 
 
 
@@ -175,15 +188,15 @@ def main():
         # View all value items
         plot_definitions()
         
-        # Show latest data for each value item
-        st.subheader("Latest Data for Value Items")
+        # Show latest data for each value item in expanders
+        st.subheader("📋 Latest Data")
         value_items = ['32', '19', '23', '18', '51']
         for series in value_items:
             try:
                 data_df = fetch_data(series)
                 series_description = series_dict[series]
-                st.markdown(f"**{series_description}**")
-                st.dataframe(data_df.tail(), use_container_width=True)
+                with st.expander(f"🔍 {series_description}"):
+                    st.dataframe(data_df.tail(), use_container_width=True)
             except Exception as e:
                 st.error(f"Error loading {series_dict[series]}: {str(e)}")
 
